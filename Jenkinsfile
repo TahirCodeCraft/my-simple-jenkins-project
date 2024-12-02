@@ -34,11 +34,17 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Push Docker image to Docker Hub (or other registry)
-                    // If you're using Docker Hub, replace with your username
-                    sh 'docker login -u tahirahmedkhan -p Tahir086@'
-                    sh 'docker tag $DOCKER_IMAGE:$DOCKER_TAG tahirahmedkhan/$DOCKER_IMAGE:$DOCKER_TAG'
-                    sh 'docker push tahirahmedkhan/$DOCKER_IMAGE:$DOCKER_TAG'
+                    // Login to Docker Hub using Jenkins credentials
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        // Login to Docker Hub
+                        sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                        
+                        // Tag the Docker image
+                        sh 'docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_USERNAME/$DOCKER_IMAGE:$DOCKER_TAG'
+                        
+                        // Push Docker image to Docker Hub
+                        sh 'docker push $DOCKER_USERNAME/$DOCKER_IMAGE:$DOCKER_TAG'
+                    }
                 }
             }
         }
@@ -47,7 +53,7 @@ pipeline {
             steps {
                 script {
                     // Run the Docker container on the deployment server (example: local machine)
-                    sh 'docker run -d -p 8080:8080 tahirahmedkhan/$DOCKER_IMAGE:$DOCKER_TAG'
+                    sh 'docker run -d -p 8080:8080 $DOCKER_USERNAME/$DOCKER_IMAGE:$DOCKER_TAG'
                 }
             }
         }
