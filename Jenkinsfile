@@ -27,8 +27,14 @@ pipeline {
         stage('Run Tests (Inside Docker)') {
             steps {
                 script {
-                    // Run tests or application commands inside Docker container
-                    sh 'docker run --rm $DOCKER_IMAGE:$DOCKER_TAG node index.js'
+                    // Run the Docker container in detached mode
+                    sh 'docker run -d -p 8081:8080 my-simple-jenkins-project:latest'
+        
+                    // Wait a few seconds to allow the container to start
+                    sleep 5
+        
+                    // Test the application by calling the exposed port on the host machine
+                    sh 'curl http://localhost:8081'
                 }
             }
         }
