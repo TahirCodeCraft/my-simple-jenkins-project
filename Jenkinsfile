@@ -4,6 +4,8 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'my-simple-jenkins-project'
         DOCKER_TAG = 'latest'
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_USER = 'tahirahmedkhan'  // Your Docker Hub username
     }
 
     stages {
@@ -34,17 +36,16 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Login to Docker Hub using Jenkins credentials
+                    // Log into Docker Hub
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        // Login to Docker Hub
                         sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
-                        
-                        // Tag the Docker image
-                        sh 'docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_USERNAME/$DOCKER_IMAGE:$DOCKER_TAG'
-                        
-                        // Push Docker image to Docker Hub
-                        sh 'docker push $DOCKER_USERNAME/$DOCKER_IMAGE:$DOCKER_TAG'
                     }
+
+                    // Tag the image with Docker Hub username
+                    sh 'docker tag $DOCKER_IMAGE:$DOCKER_TAG $DOCKER_USER/$DOCKER_IMAGE:$DOCKER_TAG'
+
+                    // Push Docker image to Docker Hub
+                    sh 'docker push $DOCKER_USER/$DOCKER_IMAGE:$DOCKER_TAG'
                 }
             }
         }
@@ -52,8 +53,8 @@ pipeline {
         stage('Deploy Docker Container') {
             steps {
                 script {
-                    // Run the Docker container on the deployment server (example: local machine)
-                    sh 'docker run -d -p 8080:8080 $DOCKER_USERNAME/$DOCKER_IMAGE:$DOCKER_TAG'
+                    // Deploy Docker container (using the correct image reference)
+                    sh 'docker run -d -p 8080:8080 $DOCKER_USER/$DOCKER_IMAGE:$DOCKER_TAG'
                 }
             }
         }
