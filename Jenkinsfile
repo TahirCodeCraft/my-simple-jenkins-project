@@ -27,7 +27,7 @@ pipeline {
         stage('Run Tests (Inside Docker)') {
             steps {
                 script {
-                    // Run the Docker container in detached mode
+                    // Run the Docker container in detached mode for testing
                     sh 'docker run -d -p 8081:8080 my-simple-jenkins-project:latest'
         
                     // Wait a few seconds to allow the container to start
@@ -35,6 +35,10 @@ pipeline {
         
                     // Test the application by calling the exposed port on the host machine
                     sh 'curl http://localhost:8081'
+                    
+                    // Stop the test container after testing to free up the port
+                    sh 'docker ps -q --filter "ancestor=$DOCKER_IMAGE:$DOCKER_TAG" | xargs docker stop'
+                    sh 'docker ps -a -q --filter "ancestor=$DOCKER_IMAGE:$DOCKER_TAG" | xargs docker rm'
                 }
             }
         }
