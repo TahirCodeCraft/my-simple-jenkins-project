@@ -54,7 +54,7 @@ pipeline {
             steps {
                 script {
                     // Deploy Docker container (using the correct image reference)
-                    sh 'docker run -d -p 8080:8080 $DOCKER_USER/$DOCKER_IMAGE:$DOCKER_TAG'
+                    sh 'docker run -d -p 8081:8080 $DOCKER_USER/$DOCKER_IMAGE:$DOCKER_TAG'
                 }
             }
         }
