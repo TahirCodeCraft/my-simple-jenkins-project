@@ -1,38 +1,53 @@
 pipeline {
-    agent any  // This tells Jenkins to run the pipeline on any available agent
-    
+    agent any
+
+    environment {
+        DOCKER_IMAGE = 'my-simple-jenkins-project'
+        DOCKER_TAG = 'latest'
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                // Checkout the code from the Git repository
-                checkout scm
+                checkout scm  // Checkout code from the Git repository
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build Docker Image') {
             steps {
-                // Install dependencies using npm
                 script {
-                    sh 'npm install'
+                    // Build Docker image
+                    sh 'docker build -t $DOCKER_IMAGE:$DOCKER_TAG .'
                 }
             }
         }
 
-        stage('Run Tests') {
+        stage('Run Tests (Inside Docker)') {
             steps {
-                // Run tests (you can add any test command here)
                 script {
-                    sh 'echo "No tests yet, but running the app..."'
-                    sh 'node index.js'
+                    // Run tests or application commands inside Docker container
+                    sh 'docker run --rm $DOCKER_IMAGE:$DOCKER_TAG node index.js'
                 }
             }
         }
 
-        stage('Deploy') {
+        stage('Push Docker Image') {
             steps {
-                // Add any deployment commands (e.g., push to Docker, etc.)
                 script {
-                    echo 'Deploying the app (placeholder for actual deploy step)'
+                    // Push Docker image to Docker Hub (or other registry)
+                    // If you're using Docker Hub, replace with your username
+                    sh 'docker login -u tahirahmedkhan -p Tahir086@'
+                    sh 'docker tag $DOCKER_IMAGE:$DOCKER_TAG tahirahmedkhan/$DOCKER_IMAGE:$DOCKER_TAG'
+                    sh 'docker push tahirahmedkhan/$DOCKER_IMAGE:$DOCKER_TAG'
+                }
+            }
+        }
+
+        stage('Deploy Docker Container') {
+            steps {
+                script {
+                    // Run the Docker container on the deployment server (example: local machine)
+                    sh 'docker run -d -p 8080:8080 tahirahmedkhan/$DOCKER_IMAGE:$DOCKER_TAG'
                 }
             }
         }
@@ -42,6 +57,11 @@ pipeline {
         always {
             echo 'Pipeline completed.'
         }
+        success {
+            echo 'Build and deployment successful!'
+        }
+        failure {
+            echo 'Build failed.'
+        }
     }
 }
-
